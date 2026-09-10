@@ -1,0 +1,5 @@
+node_modules/
+captures/
+*.har
+*-auth.json
+.env*

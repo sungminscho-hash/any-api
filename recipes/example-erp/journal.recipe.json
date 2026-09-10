@@ -1,0 +1,46 @@
+{
+  "id": "example-erp/journal",
+  "site": "example-erp",
+  "title": "분개장 조회 (가상 예시)",
+  "tier": "T2",
+  "method": "POST",
+  "url": "https://erp.example.com/api/journal/search",
+  "headers": { "x-client": "web", "Origin": "https://erp.example.com", "Referer": "https://erp.example.com/" },
+  "credentials": [
+    { "name": "bearer", "from": "cookie", "key": "<AUTH_COOKIE_NAME>", "use": "header:Authorization:Bearer " },
+    { "name": "secret", "from": "cookie", "key": "<SESSION_SECRET_COOKIE>", "use": "sign.secret" }
+  ],
+  "dynamic": [
+    { "name": "ts", "gen": "unixSeconds", "use": "header:x-ts" },
+    { "name": "nonce", "gen": "uuid4hex", "use": "header:x-nonce", "note": "1회용. 재사용 시 거부" }
+  ],
+  "sign": {
+    "header": "x-sign",
+    "algo": "b64(hmac-sha256(pathname + search + ts + nonce, key = derive(secret, ts)))",
+    "impl": "client.cjs#computeSign",
+    "vectors": [
+      { "secret": "<SECRET>", "ts": "1700000000", "nonce": "<32hex>", "pathname": "/api/journal/search", "search": "", "expect": "<base64>" }
+    ]
+  },
+  "params": [
+    { "name": "start_date", "role": "userParam", "format": "YYYYMMDD", "required": true },
+    { "name": "end_date", "role": "userParam", "format": "YYYYMMDD", "required": true },
+    { "name": "org_id", "role": "selector", "from": "org.id", "verified": "다른 값 → 다른 조직 데이터" },
+    { "name": "fy", "role": "required", "from": "org.fy", "pitfall": "없거나 빈값이면 오류 대신 0건" },
+    { "name": "filter", "role": "omitIfUnused", "pitfall": "\"\" 이면 0건. 안 쓸 때는 키 자체를 뺀다" },
+    { "name": "dept_code", "role": "ignored", "verified": "값이 틀려도 결과 동일" }
+  ],
+  "response": {
+    "type": "json",
+    "rows": "$.data[*]",
+    "completeness": [
+      { "field": "$.total", "equals": "uniqueCount(date,voucher_no)" },
+      { "rule": "sum(debit)==sum(credit)" }
+    ]
+  },
+  "readOnly": true,
+  "rateLimit": { "perMinute": 10 },
+  "sensitivity": ["거래처명", "금액"],
+  "unverified": ["page 파라미터 존재 여부", "기간을 연 단위 이상으로 넓혔을 때 잘림 여부"],
+  "provenance": { "capturedAt": "2026-09-01", "verifiedAt": "2026-09-08", "reviewedBy": null, "note": "가상 예시 — 실제 서비스 아님" }
+}
