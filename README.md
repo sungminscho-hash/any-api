@@ -25,6 +25,23 @@ Turn any data source into one verified, reusable API recipe: `runRecipe(recipe, 
 검증(`verify`)은 위에서부터 시도해 통과한 가장 높은 단을 레시피에 박고, 감시(`watch`)가 깨짐을 감지하면
 자동으로 한 단 강등한다. 상세: [docs/executors.md](docs/executors.md).
 
+## 아무 사이트나 되나? — 안 된다 (중요)
+
+대형 소비자 플랫폼은 **기술적으로도 막히고, 약관으로도 금지**된다. any-api 는 차단을 뚫는 도구가 아니라
+**허용된 원천을 하나의 계약으로 통일하는 도구**다. 검증된 현황(2026-09):
+
+| 플랫폼 | 등급 | 막히는 이유 | 써야 할 것 |
+|---|---|---|---|
+| Instagram | T3 | TLS 지문으로 봇 식별, headless 탐지, 세션 단명, 스크래핑 금지 약관 | Instagram Graph API (공식) |
+| YouTube | T3 | InnerTube 가 BotGuard attestation + PoToken(브라우저 챌린지) 요구 | YouTube Data API v3 (공식) |
+| Naver | T3 | 로그인 CAPTCHA·기기 검사, 2026-09-07 약관이 봇·크롤러·차단 우회 금지 | Naver Developers 오픈 API (공식) |
+
+차단을 지문 위조·프록시로 우회하는 것은 이 프로젝트가 **하지 않기로 한 것**이다(0단계 승인에서 "불가"로 분류).
+대신 이들은 공식 API 를 `http-replay` 레시피로 감싸 같은 `runRecipe` 계약으로 노출한다. 근거·대안 상세:
+[docs/case-studies.md](docs/case-studies.md).
+
+**되는 것은** 봇 차단이 약하거나 없고 약관이 허용하는 원천 — 대개 사내/B2B/기관 시스템, 또는 공식 API 를 주는 서비스다.
+
 ## 빠른 시작
 
 ```bash
