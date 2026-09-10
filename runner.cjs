@@ -173,8 +173,9 @@ const EXECUTORS = {
   async human() { const e = new Error('human: 작업 큐에 사람 과업 생성 (비동기). 큐 백엔드 연결 필요'); e.notImplemented = true; throw e; },
 };
 
-function defaultSign({ secret, wehagoS, ts, timestamp, nonce, pathname, search }) {
-  const s = secret ?? wehagoS ?? ''; const t = String(ts ?? timestamp ?? '');
+// 참고용 기본 서명 구현. 실제 사이트마다 sign-hunt 가 찾아낸 함수로 교체한다.
+function defaultSign({ secret, ts, timestamp, nonce, pathname, search }) {
+  const s = secret ?? ''; const t = String(ts ?? timestamp ?? '');
   const dk = crypto.createHash('sha256').update(s + t).digest('base64');
   return crypto.createHmac('sha256', Buffer.from(dk)).update((pathname || '') + (search || '') + t + (nonce || '')).digest('base64');
 }
