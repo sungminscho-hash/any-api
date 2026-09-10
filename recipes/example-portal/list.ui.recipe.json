@@ -1,0 +1,33 @@
+{
+  "id": "example-portal/list",
+  "site": "example-portal",
+  "title": "공지 목록 (서버 렌더 페이지 — XHR 없음, 가상 예시)",
+  "executor": "ui-automation",
+  "tier": "T3",
+  "demotedFrom": null,
+  "driver": { "prefer": ["ego", "playwright"], "loginState": "inherit-or-isolated" },
+  "steps": [
+    { "goto": "https://portal.example.com/notice" },
+    { "fill": ["input[name=from]", "{from}"] },
+    { "fill": ["input[name=to]", "{to}"] },
+    { "click": "button:has-text('조회')" },
+    { "waitFor": "table.result tbody tr" },
+    { "extractTable": { "selector": "table.result", "columns": { "no": 0, "title": 1, "date": 2, "dept": 3 } } },
+    { "paginate": { "next": "a.next:not(.disabled)", "max": 50 } }
+  ],
+  "params": [
+    { "name": "from", "role": "userParam", "format": "YYYY-MM-DD", "required": true },
+    { "name": "to", "role": "userParam", "format": "YYYY-MM-DD", "required": true }
+  ],
+  "response": {
+    "type": "table",
+    "completeness": [
+      { "rule": "rows.length == parseInt(text('.total-count'))" },
+      { "rule": "all(rows, r => r.date >= params.from && r.date <= params.to)" }
+    ]
+  },
+  "readOnly": true,
+  "rateLimit": { "perMinute": 4 },
+  "onCaptcha": "human",
+  "provenance": { "recordedAt": "2026-09-05", "verifiedAt": "2026-09-08", "reviewedBy": null, "note": "가상 예시 — 실제 서비스 아님" }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "example-mail/monthly-report",
+  "title": "월간 리포트 메일 첨부 → 표 (가상 예시)",
+  "executor": "mail",
+  "source": { "provider": "imap", "account": "<MAILBOX>", "folder": "INBOX" },
+  "search": { "from": "report@vendor.example.com", "subjectContains": "월간 리포트 {yyyymm}", "newerThanDays": 45 },
+  "attachments": { "match": "*.xlsx", "pick": "latest" },
+  "then": {
+    "executor": "file",
+    "parser": { "type": "xlsx", "sheet": 0, "headerRowContains": ["일자", "금액"], "columns": { "date": "일자", "amount": "금액", "memo": "적요" } }
+  },
+  "params": [ { "name": "yyyymm", "role": "userParam", "format": "YYYYMM", "required": true } ],
+  "response": { "type": "table", "completeness": [ { "rule": "rows.length > 0" }, { "rule": "sum(rows.amount) == cell('합계')" } ] },
+  "readOnly": true,
+  "sensitivity": ["금액"],
+  "provenance": { "note": "가상 예시 — 실제 계정 아님" }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "example-agent/vendor-balance",
+  "title": "거래처 포털에서 미결제 잔액 읽기 (화면이 자주 바뀌는 사이트 — 가상 예시)",
+  "executor": "agent",
+  "demotedFrom": "ui-automation",
+  "driver": { "prefer": ["ego", "aside", "claude-browser"], "loginState": "inherit" },
+  "task": "https://vendor.example.com 에 로그인된 상태에서 '정산' 메뉴로 이동해 {yyyymm} 월의 미결제 잔액 표를 찾고, 거래처명·잔액·마감일을 JSON 배열로 돌려줘. 표가 여러 페이지면 전부 모아라. 값을 추측하지 말고 화면에 보이는 것만 적어라.",
+  "outputSchema": {
+    "type": "array",
+    "items": { "type": "object", "required": ["vendor", "balance", "due"],
+               "properties": { "vendor": { "type": "string" }, "balance": { "type": "integer" }, "due": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" } } }
+  },
+  "params": [ { "name": "yyyymm", "role": "userParam", "format": "YYYYMM", "required": true } ],
+  "response": {
+    "type": "table",
+    "completeness": [
+      { "rule": "schemaValid(rows)" },
+      { "rule": "rows.length between 1 and 500" },
+      { "rule": "sum(rows.balance) == screenText('총 잔액')", "note": "에이전트가 화면의 합계도 함께 읽어 오게 task 에 요구" }
+    ]
+  },
+  "evidence": { "screenshots": true, "keep": "30d" },
+  "readOnly": true,
+  "rateLimit": { "perDay": 2 },
+  "onCaptcha": "human",
+  "provenance": { "note": "가상 예시. 비결정적 실행이므로 completeness 를 통과한 결과만 반환한다" }
+}

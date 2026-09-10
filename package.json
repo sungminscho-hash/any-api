@@ -1,0 +1,17 @@
+{
+  "name": "any-api",
+  "version": "0.1.0",
+  "description": "Turn any logged-in web screen (or file, mail, desktop app) into a verified, reusable API recipe via an execution ladder.",
+  "license": "MIT",
+  "type": "commonjs",
+  "main": "runner.cjs",
+  "scripts": {
+    "test": "node test/run.test.cjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.63.0"
+  }
+}

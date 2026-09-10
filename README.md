@@ -1,12 +1,48 @@
 # any-api
 
-**웹 화면의 버튼 하나를 검증된 API 레시피로 바꾸는 방법과 자동화 파이프라인.**
-Turn any "click → data" screen of a logged-in web app into a verified, reusable API recipe.
+**어떤 원천이든 — 웹 화면·파일·메일·데스크톱 앱·사람 작업 — 검증된 하나의 API 계약으로 바꾼다.**
+Turn any data source into one verified, reusable API recipe: `runRecipe(recipe, session, params) → { rows, files, meta }`.
 
-브라우저가 버튼을 누를 때 하는 일은 결국 HTTP 요청 몇 개다. 로그인된 세션의 자격증명을 얻고 그 요청을
-그대로 재현하면, 공식 API 가 없는 서비스의 조회·다운로드도 코드로 부를 수 있다. 이 저장소는 그 절차를
-**기록 → 분석 → (서명 역공학) → 검증 → 레시피 → 검토 → 공유** 로 정리하고, 어디까지 자동화되는지와
-어디서 사람이 검토해야 하는지를 적는다.
+브라우저가 버튼을 누를 때 하는 일은 결국 HTTP 요청 몇 개다. 그 요청을 재현하는 게 가장 빠른 길이지만,
+그게 안 되는 원천도 있다. any-api 는 **실행 사다리(execution ladder)** 로 이 문제를 푼다: 가장 빠르고
+안정적인 방법(요청 재현)부터 시도하고, 검증에 실패하면 더 범용적인 방법(브라우저 내 호출 → UI 자동화 →
+에이전트 → 파일/메일/데스크톱 → 사람)으로 한 단씩 내려간다. **바닥에 사람이 있으므로 "이 레시피는 항상
+결과를 준다"는 계약이 성립한다.** 호출자는 무엇을 어떻게 가져왔는지 몰라도 된다 — 결과 형태는 같다.
+
+## 실행 사다리 — "어느 부분이든 API"의 실제 의미
+
+| 단 | executor | 원천 | 상태 |
+|---|---|---|---|
+| 1 | `http-replay` | XHR/fetch, 다운로드 URL | ✅ 구현·테스트 |
+| 2 | `browser-fetch` | 로그인 페이지 안에서 사이트 자체 함수 호출 (서명 못 풀 때) | 설계 |
+| 3 | `ui-automation` | 서버 렌더 HTML, 표, 다단계 화면 | ✅ 구현·테스트 (Playwright) |
+| 4 | `agent` | 화면이 자주 바뀌어 스크립트로 못 박는 흐름 | 설계 (ego-lite/Aside) |
+| 5 | `file` | xlsx/csv/pdf 파싱 | ✅ 구현·테스트 (xlsx) |
+| 6 | `mail` | 메일 검색 → 첨부 → file | 설계 |
+| 7 | `desktop` | 설치형 앱 (Windows UIA / macOS AX) | 설계 |
+| 8 | `human` | 자동화 불가·승인 필요 (비동기 작업 큐) | 설계 |
+
+검증(`verify`)은 위에서부터 시도해 통과한 가장 높은 단을 레시피에 박고, 감시(`watch`)가 깨짐을 감지하면
+자동으로 한 단 강등한다. 상세: [docs/executors.md](docs/executors.md).
+
+## 빠른 시작
+
+```bash
+npm install          # exceljs (필수), playwright (ui-automation 쓸 때)
+npm test             # 로컬 서버로 http-replay·ui-automation·file·강등 검증 (11 케이스)
+```
+
+```js
+const { runRecipe } = require('any-api/runner.cjs');
+const recipe = require('./recipes/example-erp/journal.recipe.json');
+const { rows, files, meta } = await runRecipe(recipe, session, { start_date: '20250101', end_date: '20250930' });
+// meta.executor 로 어느 단으로 가져왔는지, meta.verified 로 어떤 완전성 규칙을 통과했는지 알 수 있다
+```
+
+---
+
+이 저장소는 레시피를 만드는 절차를 **기록 → 분석 → (서명 역공학) → 검증 → 레시피 → 검토 → 공유** 로
+정리하고, 어디까지 자동화되는지와 어디서 사람이 검토해야 하는지를 적는다.
 
 > 읽기 전용이 기본이다. 약관·계약상 허용된 서비스, 본인 또는 승인된 계정에만 쓴다. 봇 차단·CAPTCHA·지문
 > 검사를 우회하지 않는다. 자세한 경계는 [docs/any-api.md §6](docs/any-api.md#6-하지-않는-것--먼저-확인할-것).
